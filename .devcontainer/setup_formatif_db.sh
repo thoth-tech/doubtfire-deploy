@@ -53,7 +53,7 @@ while true; do
   fi
 done
 
-if [[ $RESP -gt 0 ]]; then
+if [[ $RESP -gt 5 ]]; then
   echo "Database already exists"
 else
   echo "Creating and populating database - do not shutdown!"

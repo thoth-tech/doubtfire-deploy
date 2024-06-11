@@ -2,7 +2,7 @@ version: '3'
 services:
   formatif-dev-container:
     container_name: formatif-dev-container
-    image: formatif-devcontainer:8.3-dev
+    image: formatif-devcontainer:9-dev
     build:
       context: ../
       dockerfile: dev.Dockerfile
@@ -10,12 +10,11 @@ services:
       # Mounts the project folder to '/workspace'. While this file is in .devcontainer,
       # mounts are relative to the first file in the list, which is a level up.
       - ..:/workspace:cached
-      - formatif_tmp_compose:/workspace/tmp
-      - formatif_student-work_compose:/student-work
-      - ws_node_modules:/workspace/node_modules
-      - web_node_modules:/workspace/doubtfire-web/node_modules
-      - formatif_db_compose:/var/lib/mysql
-      - formatif_gems_compose:/home/vscode/.gems
+      - formatif-dev-tmp:/workspace/tmp
+      - formatif-dev-student-work:/student-work
+      - df9-doubtfire-web-node_modules:/workspace/doubtfire-web/node_modules
+      - df9-formatif-dev-database:/var/lib/mysql
+      - df9-gems:/home/vscode/.gems
     ports:
       - "9876:9876"
       - "4200:4200"
