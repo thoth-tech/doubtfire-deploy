@@ -1,7 +1,7 @@
 //devcontainer.json
 {
   "name": "Formatif Development Container",
-  "image": "lmsdoubtfire/formatif-devcontainer:8.3-dev",
+  "image": "lmsdoubtfire/formatif-devcontainer:9-dev",
   "runArgs": ["--env-file", ".devcontainer/devcontainer.env"],
 
   // "dockerFile": "../dev.Dockerfile",
@@ -34,6 +34,7 @@
         "ms-azuretools.vscode-docker",
         "esbenp.prettier-vscode",
         "foxundermoon.shell-format",
+        "cyrilletuzi.angular-schematics",
         "bradlc.vscode-tailwindcss"
       ]
     }
@@ -41,7 +42,7 @@
 
   "mounts": [
     {
-      "source": "formatif-dev-database",
+      "source": "df9-formatif-dev-database",
       "target": "/var/lib/mysql",
       "type": "volume"
     },
@@ -56,17 +57,12 @@
       "type": "volume"
     },
     {
-      "source": "ws_node_modules",
-      "target": "/workspace/node_modules",
-      "type": "volume"
-    },
-    {
-      "source": "web_node_modules",
+      "source": "df9-doubtfire-web-node_modules",
       "target": "/workspace/doubtfire-web/node_modules",
       "type": "volume"
     },
     {
-      "source": "api_bundle",
+      "source": "df9-gems",
       "target": "/home/vscode/.gems",
       "type": "volume"
     }
