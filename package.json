@@ -8,5 +8,10 @@
   },
   "scripts": {
     "prepare": "npx husky install"
+  },
+  "dependencies": {
+    "angular-xeditable": "^0.10.2",
+    "codemirror": "^6.0.1",
+    "nvd3": "^1.8.6"
   }
 }
