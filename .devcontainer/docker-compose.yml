@@ -1,8 +1,12 @@
 version: '3'
+
+networks:
+  backnet:
+    internal: true
+
 services:
-  formatif-dev-container:
-    container_name: formatif-dev-container
-    image: formatif-devcontainer:8.3-dev
+  db-formatif-dev-container:
+    container_name: db-formatif-dev-container
     build:
       context: ../
       dockerfile: dev.Dockerfile
@@ -14,8 +18,10 @@ services:
       - formatif_student-work_compose:/student-work
       - ws_node_modules:/workspace/node_modules
       - web_node_modules:/workspace/doubtfire-web/node_modules
-      - formatif_db_compose:/var/lib/mysql
+      # - formatif_db_compose:/var/lib/mysql
       - formatif_gems_compose:/home/vscode/.gems
+    networks:
+      - backnet
     ports:
       - "9876:9876"
       - "4200:4200"
@@ -24,6 +30,21 @@ services:
     command: /bin/sh -c "while sleep 5000; do :; done"
     env_file:
       - devcontainer.env
+    depends_on:
+      - dev-db
+
+  dev-db:
+    container_name: doubtfire-dev-db
+    image: mariadb:10
+    restart: always
+    volumes:
+      # - ./:/workspace/.devcontainer/
+      - formatif_db_compose:/var/lib/mysql
+    env_file:
+      - ./devcontainer.env
+    networks:
+      - backnet
+
 
 volumes:
   ws_node_modules:
