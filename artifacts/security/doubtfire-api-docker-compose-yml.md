@@ -1,0 +1,79 @@
+version: '3'
+services:
+df-api:
+container_name: df-api
+build: .
+ports:
+- "3000:3000"
+volumes:
+- ./:/doubtfire
+- ../data/tmp:/doubtfire/tmp
+- ../data/student-work:/student-work
+depends_on:
+- dev-db
+environment:
+RAILS_ENV: 'development'
+
+# CORS Vulnerability Remediation
+# The DF_ALLOWED_ORIGINS variable must reflect the exact URLs where the OnTrack app will be accessed (e.g., production, staging, or development URLs).
+# Allowed origins must reflect the exact URLs where the OnTrack app will be accessed.
+# Failure to update this variable with the correct origins will cause inaccessibility.
+DF_ALLOWED_ORIGINS: "http://localhost:4200,https://example.com"
+
+DF_STUDENT_WORK_DIR: /student-work
+DF_INSTITUTION_HOST: http://localhost:3000
+DF_INSTITUTION_PRODUCT_NAME: OnTrack
+DF_INSTITUTION_PRODUCT_VERSION: 0.0.1
+DF_INSTITUTION_NAME: Doubtfire
+
+DF_SECRET_KEY_BASE: test-secret-key-test-secret-key!
+DF_SECRET_KEY_ATTR: test-secret-key-test-secret-key!
+DF_SECRET_KEY_DEVISE: test-secret-key-test-secret-key!
+
+# Authentication method - can set to AAF or ldap
+DF_AUTH_METHOD: database
+DF_AAF_ISSUER_URL: https://rapid.test.aaf.edu.au
+DF_AAF_AUDIENCE_URL: http://localhost:3000
+DF_AAF_CALLBACK_URL: http://localhost:3000/api/auth/jwt
+DF_AAF_IDENTITY_PROVIDER_URL: https://signon-uat.deakin.edu.au/idp/shibboleth
+DF_AAF_UNIQUE_URL: https://rapid.test.aaf.edu.au/jwt/authnrequest/research/Ag4EJJhjf0zXHqlKvKZEbg
+DF_AAF_AUTH_SIGNOUT_URL: https://sync-uat.deakin.edu.au/auth/logout
+DF_SECRET_KEY_AAF: v4~LMFLzzwRGZdju\5QBa@FiHIN9
+
+# Database settings - for development env
+DF_DEV_DB_ADAPTER: mysql2
+DF_DEV_DB_HOST: doubtfire-dev-db
+DF_DEV_DB_DATABASE: doubtfire-dev
+DF_DEV_DB_USERNAME: dfire
+DF_DEV_DB_PASSWORD: pwd
+
+# Database settings - for test env
+DF_TEST_DB_ADAPTER: mysql2
+DF_TEST_DB_HOST: doubtfire-dev-db
+DF_TEST_DB_DATABASE: doubtfire-dev
+DF_TEST_DB_USERNAME: dfire
+DF_TEST_DB_PASSWORD: pwd
+
+# Database settings - for production env
+DF_PRODUCTION_DB_ADAPTER: mysql2
+DF_PRODUCTION_DB_HOST: doubtfire-dev-db
+DF_PRODUCTION_DB_DATABASE: doubtfire-dev
+DF_PRODUCTION_DB_USERNAME: dfire
+DF_PRODUCTION_DB_PASSWORD: pwd
+
+# Overseer
+OVERSEER_ENABLED: 0
+# RABBITMQ_HOSTNAME: doubtfire-mq
+# RABBITMQ_USERNAME: secure_credentials
+# RABBITMQ_PASSWORD: secure_credentials
+
+dev-db:
+container_name: doubtfire-dev-db
+image: mariadb
+environment:
+MYSQL_ROOT_PASSWORD: db-root-password
+MYSQL_DATABASE: doubtfire-dev
+MYSQL_USER: dfire
+MYSQL_PASSWORD: pwd
+volumes:
+- ../data/database:/var/lib/mysql
