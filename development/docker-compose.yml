@@ -1,8 +1,25 @@
 version: '3'
 services:
+  dev-db:
+    container_name: doubtfire-dev-db
+    image: mariadb
+    environment:
+      MYSQL_ROOT_PASSWORD: db-root-password
+      MYSQL_DATABASE: doubtfire-dev
+      MYSQL_USER: dfire
+      MYSQL_PASSWORD: pwd
+    volumes:
+      - ../data/database:/var/lib/mysql
+
+  redis-sidekiq:
+    container_name: doubtfire-redis-sidekiq
+    image: redis:7.0
+    volumes:
+      - redis_sidekiq_data:/data
+
   doubtfire-api:
     container_name: doubtfire-api
-    image: lmsdoubtfire/doubtfire-api:development-dev
+    image: lmsdoubtfire/doubtfire-api:8.0-dev
     build: ../doubtfire-api
     ports:
       - "3000:3000"
@@ -60,20 +77,15 @@ services:
       # RABBITMQ_USERNAME: secure_credentials
       # RABBITMQ_PASSWORD: secure_credentials
 
-  dev-db:
-    container_name: doubtfire-dev-db
-    image: mariadb
-    environment:
-      MYSQL_ROOT_PASSWORD: db-root-password
-      MYSQL_DATABASE: doubtfire-dev
-      MYSQL_USER: dfire
-      MYSQL_PASSWORD: pwd
-    volumes:
-      - ../data/database:/var/lib/mysql
+      # Turn It In
+      TII_ENABLED: false
+
+      # Redis
+      DF_REDIS_SIDEKIQ_URL: redis://doubtfire-redis-sidekiq:6379/0
 
   doubtfire-web:
     container_name: doubtfire-web
-    image: lmsdoubtfire/doubtfire-web:development-dev
+    image: lmsdoubtfire/doubtfire-web:8.0-dev
     build: ../doubtfire-web
     command: /bin/bash -c 'npm install; npm start'
     ports:
@@ -82,3 +94,8 @@ services:
       - doubtfire-api
     volumes:
       - ../doubtfire-web:/doubtfire-web
+      - web_node_modules:/doubtfire-web/node_modules
+
+volumes:
+  web_node_modules:
+  redis_sidekiq_data:
