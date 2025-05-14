@@ -30,8 +30,8 @@ function setup_remote {
   # Adding failure message if origin is not updated
   ORIGIN_URL="https://github.com/${GH_USER}/${PROJECT}.git" || echo "Script has ailed to set origin for $PROJECT"
 
-  # Updating upstream to current thoth-tech repository location and failure message if upstream is not updated
-  UPSTREAM_URL="https://github.com/thoth-tech/${PROJECT}.git" || echo "Script has ailed to set upstream for $PROJECT"
+  # Updating upstream to current repo location and failure message if upstream is not updated
+  UPSTREAM_URL="https://github.com/doubtfire-lms/${PROJECT}.git" || echo "Script has ailed to set upstream for $PROJECT"
 
   # Changing output to changing as it will output "echo " - origin is now $ORIGIN_URL"" whether it succeeds or fails 
   echo "Setting up $PROJECT"
