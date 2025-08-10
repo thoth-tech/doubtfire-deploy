@@ -1,16 +1,17 @@
 #!/bin/bash
 
-APP_PATH=`echo $0 | awk '{split($0,patharr,"/"); idx=1; while(patharr[idx+1] != "") { if (patharr[idx] != "/") {printf("%s/", patharr[idx]); idx++ }} }'`
-APP_PATH=`cd "$APP_PATH"; pwd`
+# Updating file path logic to work in mac, linux, and windows with git bash, doesn't break
+APP_PATH="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 cd "${APP_PATH}"
 
 echo "This script will automate the process of switching remote for the Doubtfire deploy project and submodules"
 echo "At the end of this process you will have a origin referring to your fork, and upstream referring to the"
-echo "doubtfire-lms organisation root for the project."
+echo "source of the project."
 echo
 
 read -p "What is your github username: " GH_USER
+read -p "What is your upstream repository: " UPSTREAM
 
 echo
 
@@ -18,14 +19,25 @@ function setup_remote {
   PROJECT=$1
   PROJECT_PATH=$2
 
+  # Adding logic if file path does not exist
+  cd "$PROJECT_PATH" || {
+    echo "The directory $PROJECT_PATH does not exist. Skipping $PROJECT"
+    echo
+    return
+  }
+
   cd "$PROJECT_PATH"
 
-  ORIGIN_URL="https://github.com/${GH_USER}/${PROJECT}.git"
-  UPSTREAM_URL="https://github.com/doubtfire-lms/${PROJECT}.git"
+  # Adding failure message if origin is not updated
+  ORIGIN_URL="https://github.com/${GH_USER}/${PROJECT}.git" || echo "Script has failed to set origin for $PROJECT"
 
+  # Updating upstream to current repo location and failure message if upstream is not updated
+  UPSTREAM_URL="https://github.com/${UPSTREAM}/${PROJECT}.git" || echo "Script has ailed to set upstream for $PROJECT"
+
+  # Changing output to changing as it will output "echo " - origin is now $ORIGIN_URL"" whether it succeeds or fails 
   echo "Setting up $PROJECT"
-  echo " - origin is now $ORIGIN_URL"
-  echo " - upstream is now $UPSTREAM_URL"
+  echo " - Changing origin to $ORIGIN_URL"
+  echo " - Changing upstream to $UPSTREAM_URL"
   echo
 
   git remote set-url origin "$ORIGIN_URL"
