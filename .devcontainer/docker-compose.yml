@@ -47,6 +47,7 @@ services:
       LATEX_BUILD_PATH: /texlive/shell/latex_build.sh
     depends_on:
       - dev-db
+      - effort-predictor
 
   dev-db:
     container_name: doubtfire-dev-db
@@ -106,6 +107,18 @@ services:
     env_file:
       - ./devcontainer.env
     network_mode: none
+
+  effort-predictor:
+    build:
+      context: ../doubtfire-effort-predict/
+      dockerfile: Dockerfile
+    ports:
+      - "8080:8080"
+#     volumes:
+#       - ../doubtfire-api/ml_services/model_store:/home/model-server/model-store
+#       - ../doubtfire-api/ml_services/key_file.json:/home/model-server/key_file.json
+    networks:
+      - backnet
 
 volumes:
   ws_node_modules:

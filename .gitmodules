@@ -10,3 +10,6 @@
 [submodule "doubtfire-lti"]
 	path = doubtfire-lti
 	url = https://github.com/doubtfire-lms/doubtfire-lti.git
+[submodule "doubtfire-effort-predict"]
+	path = doubtfire-effort-predict
+	url = https://github.com/SteveDala/doubtfire-effort-predict.git
