@@ -114,9 +114,6 @@ services:
       dockerfile: Dockerfile
     ports:
       - "8080:8080"
-#     volumes:
-#       - ../doubtfire-api/ml_services/model_store:/home/model-server/model-store
-#       - ../doubtfire-api/ml_services/key_file.json:/home/model-server/key_file.json
     networks:
       - backnet
 

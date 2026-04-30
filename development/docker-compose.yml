@@ -29,7 +29,6 @@ services:
       - ../data/student-work:/student-work
     depends_on:
       - dev-db
-      - effort-predictor   # add dependency
     environment:
       RAILS_ENV: 'development'
 
@@ -83,21 +82,6 @@ services:
 
       # Redis
       DF_REDIS_SIDEKIQ_URL: redis://df-compose-redis-sidekiq:6379/0
-
-      # TorchServe Inference Key
-      TORCHSERVE_INFERENCE_KEY: dwQSgtJ4 #dE5alekH
-      TORCHSERVE_URL: "http://effort-predictor:8080/predictions/effort-predictor"
-
-  effort-predictor:   # TorchServe service
-    image: pytorch/torchserve:latest
-    ports:
-      - "8080:8080"
-    volumes:
-    #  - ./model_store:/home/model-server/model-store
-      - ../doubtfire-api/ml_services/model_store:/home/model-server/model-store
-      - ../doubtfire-api/ml_services/key_file.json:/home/model-server/key_file.json
-    #command: ["torchserve", "--start", "--model-store", "model_store", "--models", "effort-predictor=effort-predictor.mar"]
-    command: ["torchserve", "--start", "--model-store", "/home/model-server/model-store", "--models", "effort-predictor=effort-predictor.mar"]
 
   doubtfire-web:
     container_name: doubtfire-web
