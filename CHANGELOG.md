@@ -2,6 +2,104 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [10.0.0-15](https://github.com/b0ink/doubtfire-deploy/compare/v10.0.0-14...v10.0.0-15) (2026-02-11)
+
+
+### Features
+
+* add overseer volume ([a8d8d16](https://github.com/b0ink/doubtfire-deploy/commit/a8d8d164cf4442be6d8491d56035810edf88347a))
+
+## [10.0.0-14](https://github.com/b0ink/doubtfire-deploy/compare/v10.0.0-13...v10.0.0-14) (2025-09-17)
+
+## [10.0.0-13](https://github.com/b0ink/doubtfire-deploy/compare/v10.0.0-12...v10.0.0-13) (2025-09-17)
+
+## [10.0.0-12](https://github.com/b0ink/doubtfire-deploy/compare/v10.0.0-11...v10.0.0-12) (2025-09-17)
+
+## [10.0.0-11](https://github.com/b0ink/doubtfire-deploy/compare/v10.0.0-10...v10.0.0-11) (2025-09-02)
+
+## [10.0.0-10](https://github.com/b0ink/doubtfire-deploy/compare/v10.0.0-9...v10.0.0-10) (2025-08-20)
+
+## [10.0.0-9](https://github.com/b0ink/doubtfire-deploy/compare/v10.0.0-8...v10.0.0-9) (2025-07-28)
+
+## [10.0.0-8](https://github.com/b0ink/doubtfire-deploy/compare/v10.0.0-7...v10.0.0-8) (2025-07-28)
+
+## [10.0.0-7](https://github.com/b0ink/doubtfire-deploy/compare/v10.0.0-6...v10.0.0-7) (2025-07-28)
+
+## [10.0.0-6](https://github.com/macite/doubtfire-deploy/compare/v10.0.0-5...v10.0.0-6) (2025-07-15)
+
+
+### Features
+
+* add groundworks for jplag implementation ([8b9eaa0](https://github.com/macite/doubtfire-deploy/commit/8b9eaa02b11d11ef9c6fac6f4c893190f3f6f4be))
+* add new jplag jar to host webserver without opening browser ([7ba839e](https://github.com/macite/doubtfire-deploy/commit/7ba839e2b156ae9a34210021091cf9f29fa6511b))
+* build jplag image ([f190828](https://github.com/macite/doubtfire-deploy/commit/f190828ba750f92a40393a6e33dd2fdf00c1ac93))
+
+
+### Bug Fixes
+
+* add docker.sock to post_create.sh to remove need for sudo in docker commands ([8f94a5a](https://github.com/macite/doubtfire-deploy/commit/8f94a5a265eb80baa4ec7a580ff20f26b68a3d23))
+* clean files ([cdf8246](https://github.com/macite/doubtfire-deploy/commit/cdf82463831ae5ced5c74148c57d3ba578c91344))
+* remove docker host env variable that causes docker sock command in post_create to not work ([602316a](https://github.com/macite/doubtfire-deploy/commit/602316a95bd4168845252f5ea14e8da59b0ba162))
+* typo ([e68abbd](https://github.com/macite/doubtfire-deploy/commit/e68abbd68db04feb275fe383b615e5be2f2335ae))
+
+## [10.0.0-6](https://github.com/macite/doubtfire-deploy/compare/v10.0.0-5...v10.0.0-6) (2025-07-15)
+
+
+### Features
+
+* add groundworks for jplag implementation ([8b9eaa0](https://github.com/macite/doubtfire-deploy/commit/8b9eaa02b11d11ef9c6fac6f4c893190f3f6f4be))
+* add new jplag jar to host webserver without opening browser ([7ba839e](https://github.com/macite/doubtfire-deploy/commit/7ba839e2b156ae9a34210021091cf9f29fa6511b))
+* build jplag image ([f190828](https://github.com/macite/doubtfire-deploy/commit/f190828ba750f92a40393a6e33dd2fdf00c1ac93))
+
+
+### Bug Fixes
+
+* add docker.sock to post_create.sh to remove need for sudo in docker commands ([8f94a5a](https://github.com/macite/doubtfire-deploy/commit/8f94a5a265eb80baa4ec7a580ff20f26b68a3d23))
+* clean files ([cdf8246](https://github.com/macite/doubtfire-deploy/commit/cdf82463831ae5ced5c74148c57d3ba578c91344))
+* remove docker host env variable that causes docker sock command in post_create to not work ([602316a](https://github.com/macite/doubtfire-deploy/commit/602316a95bd4168845252f5ea14e8da59b0ba162))
+* typo ([e68abbd](https://github.com/macite/doubtfire-deploy/commit/e68abbd68db04feb275fe383b615e5be2f2335ae))
+
+## [10.0.0-5](https://github.com/macite/doubtfire-deploy/compare/v10.0.0-4...v10.0.0-5) (2025-04-11)
+
+## [10.0.0-4](https://github.com/macite/doubtfire-deploy/compare/v10.0.0-3...v10.0.0-4) (2025-04-10)
+
+## [10.0.0-3](https://github.com/macite/doubtfire-deploy/compare/v10.0.0-2...v10.0.0-3) (2025-04-10)
+
+
+### Bug Fixes
+
+* ensure texlive has public assets ([7dcbfd6](https://github.com/macite/doubtfire-deploy/commit/7dcbfd6b4ebc584b908dcae8f851f7c0d5008136))
+
+## [10.0.0-2](https://github.com/macite/doubtfire-deploy/compare/v10.0.0-1...v10.0.0-2) (2025-04-01)
+
+## [10.0.0-1](https://github.com/macite/doubtfire-deploy/compare/v10.0.0-0...v10.0.0-1) (2025-04-01)
+
+## [10.0.0-0](https://github.com/macite/doubtfire-deploy/compare/v8.4.6...v10.0.0-0) (2025-04-01)
+
+
+### Bug Fixes
+
+* copy script instead of using a mount and fix permissions ([bcec94f](https://github.com/macite/doubtfire-deploy/commit/bcec94f375a9d44b992b642cc70a3e239a5e5d31))
+* correct env setting in dev dockerfile ([ef2578a](https://github.com/macite/doubtfire-deploy/commit/ef2578a973f5071e480fea855d50cee9bf909f38))
+* create texlive dockerfile with dependencies ([6775582](https://github.com/macite/doubtfire-deploy/commit/6775582d652b184099eb80c9f74ffdfc2db579f3))
+* ensure dev container initialises first ([85e2429](https://github.com/macite/doubtfire-deploy/commit/85e2429842e03dd1eb1d4d927e459d15b6cf1083))
+* ensure devcontainer user has docker permissions ([a3af75f](https://github.com/macite/doubtfire-deploy/commit/a3af75f200fdb4be9ce5afc621c906606bbbeb73))
+* mount api test files to fix student-work symlinks ([0f580d2](https://github.com/macite/doubtfire-deploy/commit/0f580d2e3fc3275ea2131fe063abf8254d7b0d09))
+* remove mysql init from dockerfile ([f6b6243](https://github.com/macite/doubtfire-deploy/commit/f6b6243695ee9acfd5f57a069d9ff0214c361e42))
+* remove previous logs to fix permission issues ([628af89](https://github.com/macite/doubtfire-deploy/commit/628af899de1444372fe14a2f64cf1c657d8f0724))
+* remove tmp folder on new build ([f761fe5](https://github.com/macite/doubtfire-deploy/commit/f761fe5fa071b9be32bf51e948b9022035009e14))
+* remove workspace mounts, use docker-compose for shared volumes ([3d8c7cf](https://github.com/macite/doubtfire-deploy/commit/3d8c7cf6f8ceadb33aaa54f9b4d4b78be07ded12))
+* revert db name ([1eaed82](https://github.com/macite/doubtfire-deploy/commit/1eaed82d914e76848eec8a6924d2e89acde6c09f))
+* set correct mysql db ([0bf8538](https://github.com/macite/doubtfire-deploy/commit/0bf8538f4e0d9e7b614be97ade270bb16354ce00))
+* typo ([a86b3fa](https://github.com/macite/doubtfire-deploy/commit/a86b3fa11b9076a285f84bb36f7b7fdf025309f4))
+
+## [7.0.0](https://github.com/macite/doubtfire-deploy/compare/v6.0.0...v7.0.0) (2023-02-23)
+
+
+### Features
+
+* build and populate database in dev container ([5799267](https://github.com/macite/doubtfire-deploy/commit/57992670cfb63ceeef2e171ef17fa610056efbb8))
+
 ## [6.0.0](https://github.com/macite/doubtfire-deploy/compare/v5.0.6...v6.0.0) (2022-02-02)
 
 

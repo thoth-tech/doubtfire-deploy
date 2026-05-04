@@ -1,0 +1,6 @@
+{
+    "githubPullRequests.ignoredPullRequestBranches": [
+        "development"
+    ],
+    "files.eol": "\n"
+}

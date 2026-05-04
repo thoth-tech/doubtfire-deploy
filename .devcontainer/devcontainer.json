@@ -1,0 +1,96 @@
+//devcontainer.json
+{
+  "name": "Formatif Development Container",
+  // "image": "lmsdoubtfire/formatif-devcontainer:8.4-dev",
+  // "runArgs": ["--env-file", ".devcontainer/devcontainer.env"],
+
+  // "dockerFile": "../dev.Dockerfile",
+  "dockerComposeFile": "./docker-compose.yml",
+  "service": "formatif-dev-container",
+  "shutdownAction": "stopCompose",
+
+  // "workspaceFolder": "/workspace",
+
+  "workspaceFolder": "/workspace",
+  // "workspaceMount": "source=${localWorkspaceFolder},target=/workspace,type=bind",
+
+  "customizations": {
+    "vscode": {
+      "settings": {
+        "terminal.integrated.defaultProfile.linux": "zsh"
+      },
+
+      "extensions": [
+        "dbaeumer.vscode-eslint",
+        "EditorConfig.EditorConfig",
+        "ms-vsliveshare.vsliveshare",
+        "ms-vsliveshare.vsliveshare-pack",
+        "misogi.ruby-rubocop",
+        "castwide.solargraph",
+        "vscode-icons-team.vscode-icons",
+        "cschlosser.doxdocgen",
+        "eamodio.gitlens",
+        "Angular.ng-template",
+        "ms-azuretools.vscode-docker",
+        "esbenp.prettier-vscode",
+        "foxundermoon.shell-format",
+        "cyrilletuzi.angular-schematics",
+        "bradlc.vscode-tailwindcss",
+        "Shopify.ruby-lsp"
+      ]
+    }
+  },
+
+  // "mounts": [
+  //   {
+  //     "source": "formatif-dev-database",
+  //     "target": "/var/lib/mysql",
+  //     "type": "volume"
+  //   },
+  //   {
+  //     "source": "formatif-dev-tmp",
+  //     "target": "/workspace/tmp",
+  //     "type": "volume"
+  //   },
+  //   {
+  //     "source": "formatif-dev-student-work",
+  //     "target": "/student-work",
+  //     "type": "volume"
+  //   },
+  //   {
+  //     "source": "ws_node_modules",
+  //     "target": "/workspace/node_modules",
+  //     "type": "volume"
+  //   },
+  //   {
+  //     "source": "web_node_modules",
+  //     "target": "/workspace/doubtfire-web/node_modules",
+  //     "type": "volume"
+  //   },
+  //   {
+  //     "source": "api_bundle",
+  //     "target": "/home/vscode/.gems",
+  //     "type": "volume"
+  //   }
+  // ],
+
+  "forwardPorts": [3000, 4200, 9876],
+
+  "portsAttributes": {
+    "3000": {
+      "label": "Application",
+      "onAutoForward": "notify",
+      "visibility": "public"
+    },
+    "4200": {
+      "label": "Angular",
+      "onAutoForward": "notify",
+      "visibility": "public"
+    }
+  },
+
+  "postCreateCommand": "/workspace/.devcontainer/post_create.sh",
+  "postStartCommand": "/workspace/.devcontainer/post_start.sh",
+
+  "overrideCommand": true
+}
