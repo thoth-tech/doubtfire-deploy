@@ -1,5 +1,10 @@
 # Development docker images
 
+> **Legacy development-only notes.** The `build.sh`, `publish.sh`, version tags,
+> and Docker Hub flow below are not production release evidence and must not be
+> used for the 11.0.x handover. Use [RELEASING.md](../RELEASING.md) for the
+> revision-locked, digest-based production publication contract.
+
 This folder contains docker compose files, and scripts to build the associated container images from the api and web projects.
 
 ## Running in development

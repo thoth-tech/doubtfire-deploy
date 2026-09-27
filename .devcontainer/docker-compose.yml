@@ -48,6 +48,17 @@ services:
     environment:
       LATEX_CONTAINER_NAME: 1-formatif-texlive-container
       LATEX_BUILD_PATH: /texlive/shell/latex_build.sh
+      # Optional AAF development uses a dedicated registration supplied from
+      # an ignored .devcontainer/.env file. Database auth remains the default.
+      DF_AUTH_METHOD: ${DF_AUTH_METHOD:-database}
+      TUTORIAL_ENABLED: ${TUTORIAL_ENABLED:-0}
+      DF_AAF_ISSUER_URL: ${DF_AAF_ISSUER_URL:-}
+      DF_AAF_AUDIENCE_URL: ${DF_AAF_AUDIENCE_URL:-}
+      DF_AAF_CALLBACK_URL: ${DF_AAF_CALLBACK_URL:-}
+      DF_AAF_IDENTITY_PROVIDER_URL: ${DF_AAF_IDENTITY_PROVIDER_URL:-}
+      DF_AAF_UNIQUE_URL: ${DF_AAF_UNIQUE_URL:-}
+      DF_AAF_AUTH_SIGNOUT_URL: ${DF_AAF_AUTH_SIGNOUT_URL:-}
+      DF_SECRET_KEY_AAF: ${DF_SECRET_KEY_AAF:-}
     depends_on:
       - dev-db
 

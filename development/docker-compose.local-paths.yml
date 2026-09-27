@@ -1,0 +1,91 @@
+# Overlay for `docker-compose.yml` (api + web + db, overseer disabled).
+# Repoints the api/web build contexts from the doubtfire-deploy submodule
+# placeholders to the real sibling checkouts under ontrack/ (the working repos,
+# incl. uncommitted changes). Overseer services are intentionally omitted — the
+# base compose has none (OVERSEER_ENABLED: 0); use docker-compose.full.yml if you
+# need overseer.
+x-notifications-environment: &notifications-environment
+  DF_SMTP_ADDRESS: mailpit
+  DF_DEV_DB_HOST: dev-db
+  DF_TEST_DB_HOST: dev-db
+  DF_PRODUCTION_DB_HOST: dev-db
+  DF_REDIS_SIDEKIQ_URL: redis://redis-sidekiq:6379/0
+  DF_INSTITUTION_HOST: http://localhost:4400
+
+services:
+  dev-db:
+    container_name: notifications-demo-db
+    volumes:
+      - ./notifications-test-db.sql:/docker-entrypoint-initdb.d/10-notifications-test-db.sql:ro
+
+  redis-sidekiq:
+    container_name: notifications-demo-redis
+
+  mailpit:
+    container_name: notifications-demo-mailpit
+    ports: !override
+      - "8225:8025"
+      - "1225:1025"
+
+  doubtfire-api:
+    container_name: notifications-demo-api
+    # Use environment-specific image tags so another OnTrack worktree cannot
+    # silently replace the image while this demo is running.
+    image: ontrack-notifications-api:20260823
+    build: ../../doubtfire-api
+    ports: !override
+      - "3200:3000"
+    volumes:
+      - ../../doubtfire-api/:/doubtfire
+      - ../data/tmp:/doubtfire/tmp
+      - ../data/student-work:/student-work
+    environment:
+      <<: *notifications-environment
+      # api.env doesn't define these, but ActiveRecord's db tasks always
+      # process the "test" config alongside "development", crashing with a
+      # NoMethodError on the blank adapter if they're unset.
+      DF_TEST_DB_ADAPTER: mysql2
+      DF_TEST_DB_DATABASE: doubtfire-notifications-test
+      DF_TEST_DB_USERNAME: dfire
+      DF_TEST_DB_PASSWORD: pwd
+
+  doubtfire-sidekiq:
+    container_name: notifications-demo-sidekiq
+    image: ontrack-notifications-api:20260823
+    build: ../../doubtfire-api
+    volumes:
+      - ../../doubtfire-api/:/doubtfire
+      - ../data/tmp:/doubtfire/tmp
+      - ../data/student-work:/student-work
+    environment:
+      <<: *notifications-environment
+
+  doubtfire-web:
+    container_name: notifications-demo-web
+    image: ontrack-notifications-web:20260823
+    build: ../../doubtfire-web
+    ports: !override
+      - "4400:4200"
+    # The base compose now runs `npm start` and mounts proxy.conf.docker.json too, so the
+    # command and proxy volume below match the base. They are kept spelled out here only so
+    # this overlay reads as self-contained; the repo's own proxy.conf.json (which targets
+    # localhost:3000, correct only for host-based ng serve) is left untouched on the host.
+    command: /bin/bash -c 'npm install && npm start'
+    volumes:
+      - ../../doubtfire-web:/doubtfire-web
+      - ./proxy.conf.docker.json:/doubtfire-web/proxy.conf.json:ro
+
+  # Static, production/service-worker build used only for the update-prompt
+  # recording. `prepare-pwa-update-demo.sh prepare` creates its A/B bundles.
+  pwa-update-demo:
+    profiles: [pwa-update-demo]
+    container_name: notifications-demo-pwa-update
+    image: ontrack-notifications-web:20260823
+    command: ["node", "/demo-server/pwa-update-demo-server.mjs"]
+    ports: !override
+      - "4500:8080"
+    depends_on:
+      - doubtfire-api
+    volumes:
+      - ../data/pwa-update-demo:/demo:ro
+      - ./pwa-update-demo-server.mjs:/demo-server/pwa-update-demo-server.mjs:ro

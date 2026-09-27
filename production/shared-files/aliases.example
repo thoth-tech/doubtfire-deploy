@@ -1,0 +1,2 @@
+# Copy to the absolute ALIASES_PATH and replace the destination address.
+root: operations@REPLACE_ME.edu.au

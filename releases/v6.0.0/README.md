@@ -1,5 +1,10 @@
 # v6.0.0
 
+> **Historical release note — do not execute the token-export procedure
+> below.** It writes reusable bearer tokens as executable plaintext. Current
+> operators must follow [MIGRATING.md](../../MIGRATING.md), whose safe default is
+> to invalidate the old sessions and require users to sign in again.
+
 This release is a large shift in the deployment approach for Doubtfire, major upgrades to back end libraries, iterative enhancements to the front end, and new branding. The resulting product should be faster for all use cases, easier to deploy, easier to develop, and easier to upgrade going forward. We see this version as providing the foundation for the product going forward, and allowing us to more rapidly integrate new ideas and update backend components.
 
 Going forward, the next critical components for the project will be completing the migration of the front end. We aim to release this as components are updated as minor updates to v6.

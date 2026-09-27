@@ -1,0 +1,57 @@
+name: validate-production-compose
+
+on:
+  pull_request:
+    paths:
+      - ".github/workflows/validate-production-compose.yml"
+      - ".gitmodules"
+      - ".devcontainer/**"
+      - "development/**"
+      - "HANDOVER.md"
+      - "MIGRATING.md"
+      - "RELEASING.md"
+      - "DEPLOYING.md"
+      - "DESKTOP-PWA.md"
+      - "doubtfire-api"
+      - "doubtfire-web"
+      - "production/**"
+  push:
+    branches:
+      - 11.0.x
+    paths:
+      - ".github/workflows/validate-production-compose.yml"
+      - ".gitmodules"
+      - ".devcontainer/**"
+      - "development/**"
+      - "HANDOVER.md"
+      - "MIGRATING.md"
+      - "RELEASING.md"
+      - "DEPLOYING.md"
+      - "DESKTOP-PWA.md"
+      - "doubtfire-api"
+      - "doubtfire-web"
+      - "production/**"
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+
+      - name: Test desktop PWA public-asset verification
+        run: python3 -B production/tests/verify_pwa_test.py
+
+      - name: Test release publication and recovery cache controls
+        run: python3 -B production/tests/publish_release_test.py
+
+      - name: Validate production configuration
+        run: production/tests/validate_test.sh
+
+      - name: Verify upload boundaries through the production Nginx template
+        run: python3 -B production/tests/nginx_upload_test.py

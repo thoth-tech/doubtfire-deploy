@@ -1,0 +1,121 @@
+server_tokens off;
+
+# The inherited SCORM route includes a reusable credential in its path. Keep
+# routing in the common API location, but do not persist that path in proxy
+# access logs or allow browsers to send it as a Referer.
+map $uri $doubtfire_access_loggable {
+  default 1;
+  ~^/api/scorm(?:/|$) 0;
+}
+
+map $uri $doubtfire_referrer_policy {
+  default strict-origin-when-cross-origin;
+  ~^/api/scorm(?:/|$) no-referrer;
+}
+
+server {
+  listen 80 default_server;
+  server_name _;
+  access_log /var/log/nginx/access.log main if=$doubtfire_access_loggable;
+  return 444;
+}
+
+server {
+  listen 80;
+  server_name ${SERVER_NAME};
+  access_log /var/log/nginx/access.log main if=$doubtfire_access_loggable;
+  add_header Referrer-Policy $doubtfire_referrer_policy always;
+  return 301 https://${SERVER_NAME}$request_uri;
+}
+
+server {
+  listen 443 ssl default_server;
+  server_name _;
+  access_log /var/log/nginx/access.log main if=$doubtfire_access_loggable;
+
+  ssl_certificate /etc/nginx/tls/fullchain.pem;
+  ssl_certificate_key /etc/nginx/tls/private.key;
+
+  return 444;
+}
+
+server {
+  listen 443 ssl;
+  http2 on;
+  server_name ${SERVER_NAME};
+  access_log /var/log/nginx/access.log main if=$doubtfire_access_loggable;
+
+  ssl_certificate /etc/nginx/tls/fullchain.pem;
+  ssl_certificate_key /etc/nginx/tls/private.key;
+  ssl_protocols TLSv1.2 TLSv1.3;
+  ssl_session_cache shared:SSL:10m;
+  ssl_session_timeout 1d;
+  ssl_session_tickets off;
+
+  client_max_body_size ${CLIENT_MAX_BODY_SIZE};
+
+  # Rails cannot format a request rejected before it reaches the API. Keep this
+  # response compatible with the API error envelope consumed by upload clients.
+  error_page 413 = @upload_too_large;
+
+  location @upload_too_large {
+    default_type application/json;
+    return 413 '{"error":"The upload request exceeds the server limit. Try a smaller file or contact your unit staff.","code":"request_too_large"}';
+  }
+
+  # Compress proxied API responses. Only application/json is listed: the static
+  # bundle (text/css, application/javascript) is already gzipped inside the web
+  # container by doubtfire-web/nginx.conf, and the notification list is the
+  # largest per-user JSON the app returns, so it gains the most here.
+  gzip on;
+  gzip_vary on;
+  gzip_proxied any;
+  gzip_min_length 1024;
+  gzip_types application/json;
+
+  add_header Strict-Transport-Security "max-age=31536000" always;
+  add_header X-Content-Type-Options "nosniff" always;
+  add_header Referrer-Policy $doubtfire_referrer_policy always;
+
+  # Resolve service names through Docker DNS for every container lifecycle,
+  # rather than retaining an address from Nginx startup.
+  resolver 127.0.0.11 valid=10s ipv6=off;
+  set $api_upstream apiserver:3000;
+  set $web_upstream webserver:80;
+
+  location = /healthz {
+    access_log off;
+    proxy_set_header Host $host;
+    proxy_pass http://$api_upstream/readiness;
+  }
+
+  location = /healthz/web {
+    access_log off;
+    proxy_set_header Host $host;
+    proxy_pass http://$web_upstream/index.html;
+  }
+
+  location ~ ^/lti/api(?:/|$) {
+    return 404;
+  }
+
+  location ~ ^/api(?:/|$) {
+    proxy_http_version 1.1;
+    proxy_set_header Host $host;
+    proxy_set_header X-Real-IP $remote_addr;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Proto https;
+    proxy_pass http://$api_upstream;
+    proxy_read_timeout 300s;
+  }
+
+  location / {
+    proxy_http_version 1.1;
+    proxy_set_header Host $host;
+    proxy_set_header X-Real-IP $remote_addr;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Proto https;
+    proxy_pass http://$web_upstream;
+    proxy_read_timeout 90s;
+  }
+}

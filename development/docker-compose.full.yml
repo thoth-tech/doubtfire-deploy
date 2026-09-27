@@ -1,19 +1,22 @@
-version: '3'
 services:
   dev-db:
     container_name: df-compose-dev-db
-    image: mariadb
+    # Kept identical to docker-compose.yml. Both share the db_data volume, so
+    # they must agree on the server version and on the mount.
+    image: mariadb:12.3
     environment:
       MYSQL_ROOT_PASSWORD: db-root-password
       MYSQL_DATABASE: doubtfire-dev
       MYSQL_USER: dfire
       MYSQL_PASSWORD: pwd
     volumes:
-      - ../data/database:/var/lib/mysql
+      # Named volume, not ../data/database. See the comment in
+      # docker-compose.yml for why a bind mount breaks InnoDB on Windows.
+      - db_data:/var/lib/mysql
 
   doubtfire-api:
     container_name: doubtfire-api
-    image: lmsdoubtfire/doubtfire-api:10.0.x-dev
+    image: lmsdoubtfire/doubtfire-api:11.0.x-dev
     build: ../doubtfire-api
     ports:
       - "3000:3000"
@@ -34,15 +37,20 @@ services:
       DF_SECRET_KEY_ATTR: test-secret-key-test-secret-key!
       DF_SECRET_KEY_DEVISE: test-secret-key-test-secret-key!
 
-      # Authentication method - can set to AAF or ldap
-      DF_AUTH_METHOD: database
-      DF_AAF_ISSUER_URL: https://rapid.test.aaf.edu.au
-      DF_AAF_AUDIENCE_URL: http://localhost:3000
-      DF_AAF_CALLBACK_URL: http://localhost:3000/api/auth/jwt
-      DF_AAF_IDENTITY_PROVIDER_URL: https://signon-uat.deakin.edu.au/idp/shibboleth
-      DF_AAF_UNIQUE_URL: https://rapid.test.aaf.edu.au/jwt/authnrequest/research/Ag4EJJhjf0zXHqlKvKZEbg
-      DF_AAF_AUTH_SIGNOUT_URL: https://sync-uat.deakin.edu.au/auth/logout
-      DF_SECRET_KEY_AAF: v4~LMFLzzwRGZdju\5QBa@FiHIN9
+      # Database authentication is the safe local default. Optional AAF values
+      # must come from an ignored development/.env file.
+      DF_AUTH_METHOD: ${DF_AUTH_METHOD:-database}
+      DF_AAF_ISSUER_URL: ${DF_AAF_ISSUER_URL:-}
+      DF_AAF_AUDIENCE_URL: ${DF_AAF_AUDIENCE_URL:-http://localhost:3000}
+      DF_AAF_CALLBACK_URL: ${DF_AAF_CALLBACK_URL:-http://localhost:3000/api/auth/jwt}
+      DF_AAF_IDENTITY_PROVIDER_URL: ${DF_AAF_IDENTITY_PROVIDER_URL:-}
+      DF_AAF_UNIQUE_URL: ${DF_AAF_UNIQUE_URL:-}
+      DF_AAF_AUTH_SIGNOUT_URL: ${DF_AAF_AUTH_SIGNOUT_URL:-}
+      DF_SECRET_KEY_AAF: ${DF_SECRET_KEY_AAF:-}
+
+      # Peer Progress Indicator local defaults, aligned with production policy.
+      DF_PPI_MINIMUM_COHORT_SIZE: '21'
+      DF_PPI_STALE_AFTER_HOURS: '48'
 
       # Database settings - for development env
       DF_DEV_DB_ADAPTER: mysql2
@@ -67,6 +75,7 @@ services:
 
       # Overseer - disabled!
       OVERSEER_ENABLED: 1
+      TUTORIAL_ENABLED: ${TUTORIAL_ENABLED:-0}
       RABBITMQ_HOSTNAME: doubtfire-mq
       RABBITMQ_USERNAME: secure_credentials
       RABBITMQ_PASSWORD: secure_credentials
@@ -80,18 +89,19 @@ services:
 
   doubtfire-web:
     container_name: doubtfire-web
-    image: lmsdoubtfire/doubtfire-web:10.0.x-dev
+    image: lmsdoubtfire/doubtfire-web:11.0.x-dev
     build: ../doubtfire-web
-    command: /bin/bash -c 'npm install; npm run start-compose'
+    command: /bin/bash -c 'npm install && npm start'
     ports:
       - "4200:4200"
     depends_on:
       - doubtfire-api
     volumes:
       - ../doubtfire-web:/doubtfire-web
+      - ./proxy.conf.docker.json:/doubtfire-web/proxy.conf.json:ro
 
   overseer-receive:
-    image: lmsdoubtfire/doubtfire-api:development-dev
+    image: lmsdoubtfire/doubtfire-api:11.0.x-dev
     build: ../doubtfire-api
     env_file:
       - api.env
@@ -136,3 +146,6 @@ services:
     environment:
       RABBITMQ_DEFAULT_USER: secure_credentials
       RABBITMQ_DEFAULT_PASS: secure_credentials
+
+volumes:
+  db_data:

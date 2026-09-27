@@ -1,137 +1,408 @@
-version: '3.8'
+name: ${COMPOSE_PROJECT_NAME:?Set COMPOSE_PROJECT_NAME in .env.production}
+
+x-logging: &default-logging
+  driver: local
+  options:
+    max-size: 20m
+    max-file: "5"
+
+x-api-environment: &api-environment
+  RAILS_ENV: production
+  TZ: ${TZ:?Set TZ in .env.production}
+  DF_LOG_TO_STDOUT: "true"
+  DF_PRODUCTION_DB_ADAPTER: mysql2
+  DF_PRODUCTION_DB_HOST: doubtfire-db
+  DF_PRODUCTION_DB_DATABASE: ${MARIADB_DATABASE:?Set MARIADB_DATABASE in .env.production}
+  DF_PRODUCTION_DB_USERNAME: ${MARIADB_USER:?Set MARIADB_USER in .env.production}
+  DF_PRODUCTION_DB_PASSWORD: ${MARIADB_PASSWORD:?Set MARIADB_PASSWORD in .env.production}
+  DF_SECRET_KEY_BASE: ${DF_SECRET_KEY_BASE:?Set DF_SECRET_KEY_BASE in .env.production}
+  DF_SECRET_KEY_ATTR: ${DF_SECRET_KEY_ATTR:?Set DF_SECRET_KEY_ATTR in .env.production}
+  DF_SECRET_KEY_DEVISE: ${DF_SECRET_KEY_DEVISE:?Set DF_SECRET_KEY_DEVISE in .env.production}
+  DF_SECRET_KEY_MOSS: ${DF_SECRET_KEY_MOSS:-}
+  DF_ENCRYPTION_PRIMARY_KEY: ${DF_ENCRYPTION_PRIMARY_KEY:?Set DF_ENCRYPTION_PRIMARY_KEY in .env.production}
+  DF_ENCRYPTION_DETERMINISTIC_KEY: ${DF_ENCRYPTION_DETERMINISTIC_KEY:?Set DF_ENCRYPTION_DETERMINISTIC_KEY in .env.production}
+  DF_ENCRYPTION_KEY_DERIVATION_SALT: ${DF_ENCRYPTION_KEY_DERIVATION_SALT:?Set DF_ENCRYPTION_KEY_DERIVATION_SALT in .env.production}
+  DF_INSTITUTION_HOST: ${DF_INSTITUTION_HOST:?Set DF_INSTITUTION_HOST in .env.production}
+  DF_INSTITUTION_PRODUCT_NAME: ${DF_INSTITUTION_PRODUCT_NAME:?Set DF_INSTITUTION_PRODUCT_NAME in .env.production}
+  DF_INSTITUTION_SETTINGS_RB: ${DF_INSTITUTION_SETTINGS_RB:-no_institution_setting.rb}
+  DF_INSTITUTION_EMAIL_DOMAIN: ${DF_INSTITUTION_EMAIL_DOMAIN:?Set DF_INSTITUTION_EMAIL_DOMAIN in .env.production}
+  DF_INSTITUTION_EMAIL_SENDER: ${DF_INSTITUTION_EMAIL_SENDER:?Set DF_INSTITUTION_EMAIL_SENDER in .env.production}
+  DF_INSTITUTION_NAME: ${DF_INSTITUTION_NAME:?Set DF_INSTITUTION_NAME in .env.production}
+  DF_AUTH_METHOD: ${DF_AUTH_METHOD:?Set DF_AUTH_METHOD in .env.production}
+  DF_AAF_ISSUER_URL: ${DF_AAF_ISSUER_URL:-}
+  DF_AAF_AUDIENCE_URL: ${DF_AAF_AUDIENCE_URL:-}
+  DF_AAF_CALLBACK_URL: ${DF_AAF_CALLBACK_URL:-}
+  DF_AAF_IDENTITY_PROVIDER_URL: ${DF_AAF_IDENTITY_PROVIDER_URL:-}
+  DF_AAF_UNIQUE_URL: ${DF_AAF_UNIQUE_URL:-}
+  DF_AAF_AUTH_SIGNOUT_URL: ${DF_AAF_AUTH_SIGNOUT_URL:-}
+  DF_SECRET_KEY_AAF: ${DF_SECRET_KEY_AAF:-}
+  DF_SAML_METADATA_URL: ${DF_SAML_METADATA_URL:-}
+  DF_SAML_CONSUMER_SERVICE_URL: ${DF_SAML_CONSUMER_SERVICE_URL:-}
+  DF_SAML_SP_ENTITY_ID: ${DF_SAML_SP_ENTITY_ID:-}
+  DF_SAML_IDP_TARGET_URL: ${DF_SAML_IDP_TARGET_URL:-}
+  DF_SAML_IDP_SAML_NAME_IDENTIFIER_FORMAT: ${DF_SAML_IDP_SAML_NAME_IDENTIFIER_FORMAT:-}
+  DF_LDAP_HOST: ${DF_LDAP_HOST:-}
+  DF_LDAP_PORT: ${DF_LDAP_PORT:-}
+  DF_LDAP_ATTRIBUTE: ${DF_LDAP_ATTRIBUTE:-}
+  DF_LDAP_BASE: ${DF_LDAP_BASE:-}
+  DF_LDAP_SSL: ${DF_LDAP_SSL:-false}
+  DF_LDAP_USE_ADMIN_TO_BIND: ${DF_LDAP_USE_ADMIN_TO_BIND:-false}
+  DF_LDAP_ADMIN_USER: ${DF_LDAP_ADMIN_USER:-}
+  DF_LDAP_ADMIN_PWD: ${DF_LDAP_ADMIN_PWD:-}
+  DF_MAIL_PERFORM_DELIVERIES: ${DF_MAIL_PERFORM_DELIVERIES:?Set DF_MAIL_PERFORM_DELIVERIES in .env.production}
+  DF_MAIL_DELIVERY_METHOD: ${DF_MAIL_DELIVERY_METHOD:?Set DF_MAIL_DELIVERY_METHOD in .env.production}
+  DF_SMTP_ADDRESS: ${DF_SMTP_ADDRESS:?Set DF_SMTP_ADDRESS in .env.production}
+  DF_SMTP_PORT: ${DF_SMTP_PORT:?Set DF_SMTP_PORT in .env.production}
+  DF_SMTP_DOMAIN: ${DF_SMTP_DOMAIN:?Set DF_SMTP_DOMAIN in .env.production}
+  DF_SMTP_USERNAME: ${DF_SMTP_USERNAME:-}
+  DF_SMTP_PASSWORD: ${DF_SMTP_PASSWORD:-}
+  DF_SMTP_AUTHENTICATION: ${DF_SMTP_AUTHENTICATION:-}
+  OVERSEER_ENABLED: "0"
+  TUTORIAL_ENABLED: ${TUTORIAL_ENABLED:-0}
+  DF_REDIS_SIDEKIQ_URL: redis://redis-sidekiq:6379/0
+  DF_STUDENT_WORK_DIR: /student-work
+
+x-live-feature-environment: &live-feature-environment
+  # Mapping metadata scopes imported announcements on both API and worker.
+  # Only the worker receives the Microsoft application credentials below.
+  DF_TEAMS_ANNOUNCEMENTS_ENABLED: ${DF_TEAMS_ANNOUNCEMENTS_ENABLED:-false}
+  DF_TEAMS_TENANT_ID: ${DF_TEAMS_TENANT_ID:-}
+  DF_TEAMS_CHANNEL_MAPPINGS: ${DF_TEAMS_CHANNEL_MAPPINGS:-[]}
+  DF_PPI_MINIMUM_COHORT_SIZE: ${DF_PPI_MINIMUM_COHORT_SIZE:?Set DF_PPI_MINIMUM_COHORT_SIZE in .env.production}
+  DF_PPI_STALE_AFTER_HOURS: ${DF_PPI_STALE_AFTER_HOURS:?Set DF_PPI_STALE_AFTER_HOURS in .env.production}
+  DOUBTFIRE_VAPID_PUBLIC_KEY: ${DOUBTFIRE_VAPID_PUBLIC_KEY:?Set DOUBTFIRE_VAPID_PUBLIC_KEY in .env.production}
+  DOUBTFIRE_VAPID_PRIVATE_KEY: ${DOUBTFIRE_VAPID_PRIVATE_KEY:?Set DOUBTFIRE_VAPID_PRIVATE_KEY in .env.production}
+  DOUBTFIRE_VAPID_SUBJECT: ${DOUBTFIRE_VAPID_SUBJECT:?Set DOUBTFIRE_VAPID_SUBJECT in .env.production}
 
 networks:
-  backnet:
-  frontnet:
+  edge:
+  data:
+    internal: true
+  egress:
+  docker-api:
+    internal: true
 
 services:
-
-  # This is the proxy which receives all http requests and forwards to relevant servers.
   proxy:
-    image: nginx:mainline-alpine
-    container_name: proxy
-    ports:
-      - 80:80
-      - 443:443
-    depends_on:
-      - webserver
-      - apiserver
-    networks:
-      - frontnet
-      - backnet
-    volumes:
-      - ./shared-files/proxy-nginx.conf:/etc/nginx/nginx.conf
-      - ./localhost.crt:/etc/nginx/cert.crt # replace with real certificate
-      - ./localhost.key:/etc/nginx/key.key # replace with real key
-    restart: on-failure:5
-
-  # Web server hosts the static files
-  webserver:
-    platform: linux/amd64
-    image: lmsdoubtfire/doubtfire-web:10.0.0-3
-    # ports:
-    #   - 8080:8080
-    networks:
-      - backnet
-    restart: on-failure:5
-
-  # API server runs the rails project
-  apiserver:
-    platform: linux/amd64
-    image: lmsdoubtfire/apiserver:10.0.0-4
-    env_file:
-      - .env.production
-    # ports:
-    #   - 3000:3000
-    networks:
-      - backnet
-    depends_on:
-      - doubtfire-db
-    volumes:
-      - student_work:/student-work # Adjust path to where student data should be stored
-      - doubtfire_logs:/doubtfire/log
-      - ./shared-files:/shared-files
-      - ./shared-files/aliases:/etc/aliases:ro
-    command: /bin/bash -c "bundle exec rails s -b 0.0.0.0"
-    restart: on-failure:5
-
-  # Database server - could be external to docker
-  doubtfire-db:
-    image: mariadb:10
-    restart: always
-    networks:
-      - backnet
+    image: ${PROXY_IMAGE:?Set PROXY_IMAGE to an immutable image digest}
     environment:
-      MARIADB_RANDOM_ROOT_PASSWORD: true
-      MARIADB_USER: dfire # Update with mariadb username
-      MARIADB_PASSWORD: pwd # Update with mariadb password
-      MARIADB_DATABASE: doubtfire # Update with mariadb database name
-    volumes:
-      - mysql_db:/var/lib/mysql
-
-  # Automated generation of PDFs using cron
-  pdfgen:
-    platform: linux/amd64
-    image: lmsdoubtfire/appserver:10.0.0-4
-    env_file:
-      - .env.production
-    networks:
-      - backnet
+      SERVER_NAME: ${SERVER_NAME:?Set SERVER_NAME in .env.production}
+      CLIENT_MAX_BODY_SIZE: ${CLIENT_MAX_BODY_SIZE:-1g}
+      NGINX_ENVSUBST_FILTER: ^(SERVER_NAME|CLIENT_MAX_BODY_SIZE)$$
+    ports:
+      - "80:80"
+      - "443:443"
     depends_on:
-      - doubtfire-db
+      apiserver:
+        condition: service_healthy
+      webserver:
+        condition: service_healthy
+    networks:
+      - edge
     volumes:
-      - student_work:/student-work # Update with path to student work
-      - ./shared-files:/shared-files
-      - ./shared-files/aliases:/etc/aliases:ro
-      - doubtfire_logs:/doubtfire/log
-      - latex_tmp:/doubtfire/tmp/rails-latex
-    command: /doubtfire/lib/shell/pdfgen_entry_point.sh
-    restart: on-failure:5
+      - ./proxy-nginx.conf.template:/etc/nginx/templates/default.conf.template:ro
+      - ${TLS_CERTIFICATE_PATH:?Set TLS_CERTIFICATE_PATH}:/etc/nginx/tls/fullchain.pem:ro
+      - ${TLS_PRIVATE_KEY_PATH:?Set TLS_PRIVATE_KEY_PATH}:/etc/nginx/tls/private.key:ro
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - >-
+          curl --fail --silent --show-error --insecure
+          --header 'Host: ${SERVER_NAME}'
+          https://127.0.0.1/healthz
+          && curl --fail --silent --show-error --insecure
+          --header 'Host: ${SERVER_NAME}'
+          https://127.0.0.1/healthz/web
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    restart: unless-stopped
+    logging: *default-logging
+
+  webserver:
+    image: ${DOUBTFIRE_WEB_IMAGE:?Set DOUBTFIRE_WEB_IMAGE to an immutable image digest}
+    expose:
+      - "80"
+    networks:
+      - edge
+    healthcheck:
+      test: ["CMD-SHELL", "wget --quiet --spider http://127.0.0.1/index.html"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    restart: unless-stopped
+    logging: *default-logging
+
+  migrate:
+    image: ${DOUBTFIRE_API_IMAGE:?Set DOUBTFIRE_API_IMAGE to an immutable image digest}
+    environment: *api-environment
+    depends_on:
+      doubtfire-db:
+        condition: service_healthy
+    networks:
+      data:
+      egress:
+        gw_priority: 1
+    command: ["bundle", "exec", "rails", "db:migrate"]
+    restart: "no"
+    logging: *default-logging
+
+  apiserver:
+    image: ${DOUBTFIRE_API_IMAGE:?Set DOUBTFIRE_API_IMAGE to an immutable image digest}
+    environment:
+      <<: [*api-environment, *live-feature-environment]
+    expose:
+      - "3000"
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+      redis-sidekiq:
+        condition: service_healthy
+    networks:
+      edge:
+        gw_priority: 1
+      data:
+    volumes:
+      - ${STUDENT_WORK_PATH:?Set STUDENT_WORK_PATH}:/student-work
+      - ${DOUBTFIRE_LOG_PATH:?Set DOUBTFIRE_LOG_PATH}:/doubtfire/log
+    command: ["bundle", "exec", "rails", "server", "-b", "0.0.0.0"]
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "--silent", "--show-error", "http://127.0.0.1:3000/readiness"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+    init: true
+    stop_grace_period: 30s
+    restart: unless-stopped
+    logging: *default-logging
+
+  doubtfire-db:
+    image: ${MARIADB_IMAGE:?Set MARIADB_IMAGE to an immutable image digest}
+    environment:
+      MARIADB_DATABASE: ${MARIADB_DATABASE:?Set MARIADB_DATABASE in .env.production}
+      MARIADB_USER: ${MARIADB_USER:?Set MARIADB_USER in .env.production}
+      MARIADB_PASSWORD: ${MARIADB_PASSWORD:?Set MARIADB_PASSWORD in .env.production}
+      MARIADB_ROOT_PASSWORD: ${MARIADB_ROOT_PASSWORD:?Set MARIADB_ROOT_PASSWORD in .env.production}
+      TZ: ${TZ:?Set TZ in .env.production}
+    expose:
+      - "3306"
+    networks:
+      - data
+    volumes:
+      - ${MARIADB_DATA_PATH:?Set MARIADB_DATA_PATH}:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+    stop_grace_period: 60s
+    restart: unless-stopped
+    logging: *default-logging
 
   redis-sidekiq:
-    container_name: redis-sidekiq
-    image: redis:7.0
-    volumes:
-      - redis_data:/data
+    image: ${REDIS_IMAGE:?Set REDIS_IMAGE to an immutable image digest}
+    command: ["redis-server", "--appendonly", "yes", "--appendfsync", "everysec"]
+    expose:
+      - "6379"
     networks:
-      - backnet
+      - data
+    volumes:
+      - ${REDIS_DATA_PATH:?Set REDIS_DATA_PATH}:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+    stop_grace_period: 30s
+    restart: unless-stopped
+    logging: *default-logging
+
+  pdfgen:
+    image: ${DOUBTFIRE_APP_IMAGE:?Set DOUBTFIRE_APP_IMAGE to an immutable image digest}
+    environment:
+      <<: *api-environment
+      DOCKER_HOST: tcp://docker-socket-proxy:2375
+      LATEX_BUILD_PATH: /texlive/shell/latex_build.sh
+      LATEX_CONTAINER_NAME: ${COMPOSE_PROJECT_NAME}-texlive-pdfgen
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+      apiserver:
+        condition: service_healthy
+      docker-socket-proxy:
+        condition: service_healthy
+      jplag:
+        condition: service_healthy
+      texlive-pdfgen:
+        condition: service_healthy
+    networks:
+      data:
+      egress:
+        gw_priority: 1
+      docker-api:
+    volumes:
+      - ${STUDENT_WORK_PATH:?Set STUDENT_WORK_PATH}:/student-work
+      - ${DOUBTFIRE_LOG_PATH:?Set DOUBTFIRE_LOG_PATH}:/doubtfire/log
+      - ${ALIASES_PATH:?Set ALIASES_PATH}:/etc/aliases:ro
+      - ${MSMTPRC_PATH:?Set MSMTPRC_PATH}:/shared-files/msmtprc:ro
+      - latex_pdfgen:/doubtfire/tmp/rails-latex
+      - jplag_tmp:/doubtfire/tmp/jplag
+    command: ["/doubtfire/lib/shell/pdfgen_entry_point.sh"]
+    init: true
+    stop_grace_period: 30s
+    restart: unless-stopped
+    logging: *default-logging
 
   sidekiq:
-    platform: linux/amd64
-    image: lmsdoubtfire/appserver:10.0.0-4
-    env_file:
-      - .env.production
+    image: ${DOUBTFIRE_APP_IMAGE:?Set DOUBTFIRE_APP_IMAGE to an immutable image digest}
     environment:
-      DOCKER_HOST: host.docker.internal
-    networks:
-      - backnet
+      <<: [*api-environment, *live-feature-environment]
+      DF_TEAMS_CLIENT_ID: ${DF_TEAMS_CLIENT_ID:-}
+      DF_TEAMS_CLIENT_SECRET: ${DF_TEAMS_CLIENT_SECRET:-}
+      DF_SIDEKIQ_CONCURRENCY: ${DF_SIDEKIQ_CONCURRENCY:?Set DF_SIDEKIQ_CONCURRENCY in .env.production}
+      DOCKER_HOST: tcp://docker-socket-proxy:2375
+      LATEX_BUILD_PATH: /texlive/shell/latex_build.sh
+      LATEX_CONTAINER_NAME: ${COMPOSE_PROJECT_NAME}-texlive-sidekiq
     depends_on:
-      - doubtfire-db
-      - redis-sidekiq
+      migrate:
+        condition: service_completed_successfully
+      apiserver:
+        condition: service_healthy
+      redis-sidekiq:
+        condition: service_healthy
+      docker-socket-proxy:
+        condition: service_healthy
+      texlive-sidekiq:
+        condition: service_healthy
+    networks:
+      data:
+      egress:
+        gw_priority: 1
+      docker-api:
     volumes:
-      - student_work:/student-work # Update with path to student work
-      - ./shared-files:/shared-files
-      - ./shared-files/aliases:/etc/aliases:ro
-      - doubtfire_logs:/doubtfire/log
-      - latex_tmp:/doubtfire/tmp/rails-latex
-    command: /doubtfire/lib/shell/sidekiq_entry_point.sh
-    restart: on-failure:5
+      - ${STUDENT_WORK_PATH:?Set STUDENT_WORK_PATH}:/student-work
+      - ${DOUBTFIRE_LOG_PATH:?Set DOUBTFIRE_LOG_PATH}:/doubtfire/log
+      - ${ALIASES_PATH:?Set ALIASES_PATH}:/etc/aliases:ro
+      - ${MSMTPRC_PATH:?Set MSMTPRC_PATH}:/shared-files/msmtprc:ro
+      - latex_sidekiq:/doubtfire/tmp/rails-latex
+    command: ["/doubtfire/lib/shell/sidekiq_entry_point.sh"]
+    init: true
+    stop_grace_period: 30s
+    restart: unless-stopped
+    logging: *default-logging
 
-  texlive:
-    container_name: texlive-container
-    image: lmsdoubtfire/formatif-latex:10.0.0-4
-    # build:
-    #   context: ../
-    #   dockerfile: texlive.Dockerfile
+  texlive-sidekiq:
+    image: ${TEXLIVE_IMAGE:?Set TEXLIVE_IMAGE to an immutable image digest}
+    container_name: ${COMPOSE_PROJECT_NAME}-texlive-sidekiq
+    network_mode: none
     volumes:
-      - student_work:/student-work
-      - latex_tmp:/workdir/texlive-latex
-    command: /bin/sh -c "sleep infinity"
+      - latex_sidekiq:/workdir/texlive-latex
+    command: ["sh", "-c", "sleep infinity"]
+    mem_limit: ${TEXLIVE_MEMORY_LIMIT:?Set TEXLIVE_MEMORY_LIMIT in .env.production}
+    cpus: ${TEXLIVE_CPU_LIMIT:?Set TEXLIVE_CPU_LIMIT in .env.production}
+    pids_limit: ${TEXLIVE_PIDS_LIMIT:?Set TEXLIVE_PIDS_LIMIT in .env.production}
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    healthcheck:
+      test: ["CMD", "test", "-x", "/texlive/shell/latex_build.sh"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    restart: unless-stopped
+    logging: *default-logging
+
+  texlive-pdfgen:
+    image: ${TEXLIVE_IMAGE:?Set TEXLIVE_IMAGE to an immutable image digest}
+    container_name: ${COMPOSE_PROJECT_NAME}-texlive-pdfgen
+    network_mode: none
+    volumes:
+      - latex_pdfgen:/workdir/texlive-latex
+    command: ["sh", "-c", "sleep infinity"]
+    mem_limit: ${TEXLIVE_MEMORY_LIMIT:?Set TEXLIVE_MEMORY_LIMIT in .env.production}
+    cpus: ${TEXLIVE_CPU_LIMIT:?Set TEXLIVE_CPU_LIMIT in .env.production}
+    pids_limit: ${TEXLIVE_PIDS_LIMIT:?Set TEXLIVE_PIDS_LIMIT in .env.production}
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    healthcheck:
+      test: ["CMD", "test", "-x", "/texlive/shell/latex_build.sh"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    restart: unless-stopped
+    logging: *default-logging
+
+  jplag:
+    image: ${JPLAG_IMAGE:?Set JPLAG_IMAGE to an immutable image digest}
+    container_name: jplag
+    network_mode: none
+    volumes:
+      - ${JPLAG_REPORT_PATH:?Set JPLAG_REPORT_PATH}:/student-work/jplag
+      - ${JPLAG_ARCHIVE_REPORT_PATH:?Set JPLAG_ARCHIVE_REPORT_PATH}:/student-work/archive/jplag
+      - jplag_tmp:/tmp/jplag
+    command: ["sh", "-c", "sleep infinity"]
+    mem_limit: ${JPLAG_MEMORY_LIMIT:?Set JPLAG_MEMORY_LIMIT in .env.production}
+    cpus: ${JPLAG_CPU_LIMIT:?Set JPLAG_CPU_LIMIT in .env.production}
+    pids_limit: ${JPLAG_PIDS_LIMIT:?Set JPLAG_PIDS_LIMIT in .env.production}
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    healthcheck:
+      test: ["CMD", "test", "-s", "/jplag/jplag-jar-with-dependencies.jar"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    restart: unless-stopped
+    logging: *default-logging
+
+  docker-socket-proxy:
+    image: ${DOCKER_SOCKET_PROXY_IMAGE:?Set DOCKER_SOCKET_PROXY_IMAGE to an immutable image digest}
+    environment:
+      COMPOSE_PROJECT_NAME: ${COMPOSE_PROJECT_NAME:?Set COMPOSE_PROJECT_NAME in .env.production}
+    command:
+      - /bin/sh
+      - -ec
+      - >-
+        sed "s/__PROJECT_NAME__/$${COMPOSE_PROJECT_NAME}/g"
+        /usr/local/etc/haproxy/docker-api.cfg.template
+        > /tmp/docker-api.cfg
+        && exec haproxy -W -db -f /tmp/docker-api.cfg
+    networks:
+      - docker-api
+    volumes:
+      - ${DOCKER_SOCKET_PATH:?Set DOCKER_SOCKET_PATH}:/var/run/docker.sock:ro
+      - ./docker-socket-proxy.cfg:/usr/local/etc/haproxy/docker-api.cfg.template:ro
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--spider", "http://127.0.0.1:2375/_ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+    read_only: true
+    tmpfs:
+      - /run
+      - /tmp
+    user: "0:0"
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    restart: unless-stopped
+    logging: *default-logging
 
 volumes:
-  latex_tmp: {}
-  redis_data: {}
-  doubtfire_logs: {}
-  mysql_db: {}
-  student_work: {}
-
+  latex_pdfgen:
+  latex_sidekiq:
+  jplag_tmp:

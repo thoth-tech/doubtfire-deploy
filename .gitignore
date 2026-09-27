@@ -3,6 +3,16 @@
 !/data/**/
 !/data/**/.gitkeep
 /node_modules/
+/.devcontainer/.env
+/development/.env
+
+# Production runtime configuration, credentials, and local TLS material.
+/production/.env.production
+/production/secrets/*
+!/production/secrets/.gitkeep
+/production/shared-files/aliases
+/production/shared-files/msmtprc
+/production/*.sql
 
 # Created by https://www.toptal.com/developers/gitignore/api/macos
 # Edit at https://www.toptal.com/developers/gitignore?templates=macos

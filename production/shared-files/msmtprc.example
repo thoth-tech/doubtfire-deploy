@@ -1,0 +1,17 @@
+# Copy to the absolute MSMTPRC_PATH, replace all placeholders, and chmod 0600.
+# See https://marlam.de/msmtp/msmtprc.txt for other supported configurations.
+defaults
+auth           on
+auto_from      off
+tls            on
+tls_starttls   on
+logfile        /doubtfire/log/msmtp
+
+account        server
+host           smtp.REPLACE_ME.edu.au
+port           587
+from           ontrack@REPLACE_ME.edu.au
+user           REPLACE_ME
+password       REPLACE_ME
+
+account default : server

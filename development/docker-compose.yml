@@ -1,25 +1,58 @@
-version: '3'
 services:
   dev-db:
     container_name: df-compose-dev-db
-    image: mariadb
+    # Pinned so everyone runs the same server. An unpinned `mariadb` tag means
+    # two people who set up a month apart get two different majors, and a data
+    # directory written by one is not readable by the other.
+    image: mariadb:12.3
     environment:
       MYSQL_ROOT_PASSWORD: db-root-password
       MYSQL_DATABASE: doubtfire-dev
       MYSQL_USER: dfire
       MYSQL_PASSWORD: pwd
     volumes:
-      - ../data/database:/var/lib/mysql
+      # A named volume, NOT a bind mount to ../data/database. InnoDB cannot
+      # reliably rename a table on a host directory shared into the container
+      # on Windows, and it fails with errno 194, "Tablespace is missing for a
+      # table". Rails hits that on a clean `rake db:populate`, because loading
+      # the schema renames tables while adding foreign keys. It reads as a
+      # Rails or a data corruption problem and is neither: the same database
+      # on a named volume is fine. docker-library/mariadb#331.
+      # docs/ONTRACK_PODMAN_SETUP.md reached the same conclusion for Podman.
+      - db_data:/var/lib/mysql
 
   redis-sidekiq:
     container_name: df-compose-redis-sidekiq
     image: redis:7.0
     volumes:
       - redis_sidekiq_data:/data
+    # doubtfire-sidekiq is gated on this. A plain depends_on only waits for the
+    # container to exist, not for Redis to accept a connection, and a worker
+    # that loses that race is down for the rest of the session with nothing in
+    # the api log to say so.
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 5s
+
+  # Mail catcher. Accepts every email the app sends and shows it in a web inbox
+  # at http://localhost:8025. Nothing is delivered to the outside world.
+  mailpit:
+    container_name: df-compose-mailpit
+    image: axllent/mailpit:latest
+    ports:
+      - "8025:8025"   # web inbox, open this in a browser
+      - "1025:1025"   # smtp, what the api sends to
+    environment:
+      MP_MAX_MESSAGES: 500
+      MP_SMTP_AUTH_ACCEPT_ANY: 1
+      MP_SMTP_AUTH_ALLOW_INSECURE: 1
 
   doubtfire-api:
     container_name: doubtfire-api
-    image: lmsdoubtfire/doubtfire-api:8.0.x-dev
+    image: lmsdoubtfire/doubtfire-api:11.0.x-dev
     build: ../doubtfire-api
     ports:
       - "3000:3000"
@@ -29,26 +62,55 @@ services:
       - ../data/student-work:/student-work
     depends_on:
       - dev-db
-    environment:
+      - redis-sidekiq
+      - mailpit
+    environment: &doubtfire-api-environment
       RAILS_ENV: 'development'
+      TZ: Australia/Melbourne
+      TUTORIAL_ENABLED: ${TUTORIAL_ENABLED:-0}
+
+      # Mail catcher. Setting DF_SMTP_ADDRESS is what switches the api from
+      # writing mail to a file to sending it to mailpit. Unset it and the api
+      # falls back to files, so running without docker still works.
+      DF_SMTP_ADDRESS: df-compose-mailpit
+      DF_SMTP_PORT: 1025
+
+      # Web push. Without these the push channel is a no-op and the app behaves
+      # exactly as it did before push existed, so it is safe to blank them out.
+      #
+      # This is a throwaway pair generated for local development only, following
+      # the same convention as DF_SECRET_KEY_BASE below. Production sets its own
+      # through real secrets and must never reuse these.
+      # See doubtfire-api/docs/notifications/push-setup.md to generate your own.
+      DOUBTFIRE_VAPID_PUBLIC_KEY: 'BOs-KbIoHK7gUIX3i2_uEuDoouj-GKxB-mY9CRmLNmd4Wn-SSl254E1g6jR1ukL3e37p8uCpaMjOvfAB0BwzvSI='
+      DOUBTFIRE_VAPID_PRIVATE_KEY: '_NFIWSUTdCdLJJFh87pf4ekQLmNYqsweZ4288NpVZaY='
+      DOUBTFIRE_VAPID_SUBJECT: 'mailto:noreply@doubtfire.local'
+
+      # Peer Progress Indicator local defaults, aligned with production policy.
+      DF_PPI_MINIMUM_COHORT_SIZE: '21'
+      DF_PPI_STALE_AFTER_HOURS: '48'
 
       DF_STUDENT_WORK_DIR: /student-work
-      DF_INSTITUTION_HOST: http://localhost:3000
+      # User-facing links in notification emails must open the web app, not the
+      # Rails API port.
+      DF_INSTITUTION_HOST: http://localhost:4200
       DF_INSTITUTION_PRODUCT_NAME: OnTrack
+      DF_INSTITUTION_EMAIL_SENDER: noreply@doubtfire.local
 
       DF_SECRET_KEY_BASE: test-secret-key-test-secret-key!
       DF_SECRET_KEY_ATTR: test-secret-key-test-secret-key!
       DF_SECRET_KEY_DEVISE: test-secret-key-test-secret-key!
 
-      # Authentication method - can set to AAF or ldap
-      DF_AUTH_METHOD: database
-      DF_AAF_ISSUER_URL: https://rapid.test.aaf.edu.au
-      DF_AAF_AUDIENCE_URL: http://localhost:3000
-      DF_AAF_CALLBACK_URL: http://localhost:3000/api/auth/jwt
-      DF_AAF_IDENTITY_PROVIDER_URL: https://signon-uat.deakin.edu.au/idp/shibboleth
-      DF_AAF_UNIQUE_URL: https://rapid.test.aaf.edu.au/jwt/authnrequest/research/Ag4EJJhjf0zXHqlKvKZEbg
-      DF_AAF_AUTH_SIGNOUT_URL: https://sync-uat.deakin.edu.au/auth/logout
-      DF_SECRET_KEY_AAF: v4~LMFLzzwRGZdju\5QBa@FiHIN9
+      # Database authentication is the safe local default. Optional AAF values
+      # must come from an ignored development/.env file.
+      DF_AUTH_METHOD: ${DF_AUTH_METHOD:-database}
+      DF_AAF_ISSUER_URL: ${DF_AAF_ISSUER_URL:-}
+      DF_AAF_AUDIENCE_URL: ${DF_AAF_AUDIENCE_URL:-http://localhost:3000}
+      DF_AAF_CALLBACK_URL: ${DF_AAF_CALLBACK_URL:-http://localhost:3000/api/auth/jwt}
+      DF_AAF_IDENTITY_PROVIDER_URL: ${DF_AAF_IDENTITY_PROVIDER_URL:-}
+      DF_AAF_UNIQUE_URL: ${DF_AAF_UNIQUE_URL:-}
+      DF_AAF_AUTH_SIGNOUT_URL: ${DF_AAF_AUTH_SIGNOUT_URL:-}
+      DF_SECRET_KEY_AAF: ${DF_SECRET_KEY_AAF:-}
 
       # Database settings - for development env
       DF_DEV_DB_ADAPTER: mysql2
@@ -83,11 +145,62 @@ services:
       # Redis
       DF_REDIS_SIDEKIQ_URL: redis://df-compose-redis-sidekiq:6379/0
 
+  doubtfire-sidekiq:
+    container_name: doubtfire-sidekiq
+    image: lmsdoubtfire/doubtfire-api:11.0.x-dev
+    build: ../doubtfire-api
+    # Deliberately narrow. NotificationEmailJob names `mailers` and
+    # PushNotificationDeliveryJob names `notifications`, so this worker can
+    # deliver both user-facing channels without consuming `default`.
+    #
+    # Taking `default` here would run AcceptSubmissionJob, which is enqueued on
+    # every task submission and calls convert_submission_to_pdf. That raises
+    # "LATEX_CONTAINER_NAME is not set" because development/ has no texlive
+    # service the way production/ does. The task would drop to "fix" with an
+    # automated comment on it, so submissions would break for everyone not
+    # working on notifications. Left unread in Redis, as they are today, those
+    # jobs are harmless.
+    #
+    # `default` needs a texlive service and LATEX_CONTAINER_NAME first, or the
+    # jobs that need one need a queue of their own. Until then anything we do
+    # want run here has to name one of the two channel queues. The
+    # config/schedule.yml cron entries are included: this worker registers them
+    # at startup and they enqueue on `default`, so they are scheduled but not
+    # run.
+    #
+    # `-q` is set here and not in config/sidekiq.yml because that file lives in
+    # doubtfire-api, which this repo cannot keep in step. The config file is
+    # still read for :concurrency and the command line wins over it.
+    command: ["bundle", "exec", "sidekiq", "-C", "config/sidekiq.yml", "-q", "mailers", "-q", "notifications"]
+    volumes:
+      - ../doubtfire-api/:/doubtfire
+      - ../data/tmp:/doubtfire/tmp
+      - ../data/student-work:/student-work
+    # Same policy the sidekiq service in production/docker-compose.yml uses.
+    # A worker that died on a transient Redis or database hiccup is invisible.
+    # The rest of the stack still looks up and email just stops.
+    restart: on-failure:5
+    depends_on:
+      dev-db:
+        condition: service_started
+      redis-sidekiq:
+        condition: service_healthy
+      mailpit:
+        condition: service_started
+    environment:
+      <<: *doubtfire-api-environment
+      DF_LOG_TO_STDOUT: '1'
+      # This is the process that evaluates config/schedule.yml. Three of its
+      # seven entries name a wall-clock time (5am, 8am, 11:55pm), so an unset
+      # TZ would run those on the image default of UTC and put them hours out.
+      # Same value as development/api.env.
+      TZ: Australia/Melbourne
+
   doubtfire-web:
     container_name: doubtfire-web
-    image: lmsdoubtfire/doubtfire-web:8.0.x-dev
+    image: lmsdoubtfire/doubtfire-web:11.0.x-dev
     build: ../doubtfire-web
-    command: /bin/bash -c 'npm install; npm run start-compose'
+    command: /bin/bash -c 'npm install && npm start'
     ports:
       - "4200:4200"
     depends_on:
@@ -95,7 +208,9 @@ services:
     volumes:
       - ../doubtfire-web:/doubtfire-web
       - web_node_modules:/doubtfire-web/node_modules
+      - ./proxy.conf.docker.json:/doubtfire-web/proxy.conf.json:ro
 
 volumes:
+  db_data:
   web_node_modules:
   redis_sidekiq_data:
